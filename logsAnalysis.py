@@ -72,7 +72,7 @@ try:
     popular_authors = my_cursor.fetchall()
     print("Popular authors by summing all their article views: ")
     for author in popular_authors:
-        print(" Author:- {} \t No. of Views:- {0: >8}".
+        print(" Author:- {} \t No. of Views:- {}".
               format(author[0], author[1]))
     print("*" * 85)
     my_cursor.execute(DATES_BAD_REQUESTS_SQL)
