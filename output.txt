@@ -1,0 +1,15 @@
+*************************************************************************************
+Top 3 articles sorted by views are : 
+ Article :- Candidate is jerk, alleges rival 	 No. of Views:- 338647
+ Article :- Bears love berries, alleges bear 	 No. of Views:- 253801
+ Article :- Bad things gone, say good people 	 No. of Views:- 170098
+*************************************************************************************
+Popular authors by summing all their article views: 
+ Author:- Ursula La Multa 	 No. of Views:- 507594
+ Author:- Rudolf von Treppenwitz 	 No. of Views:- 423457
+ Author:- Anonymous Contributor 	 No. of Views:- 170098
+ Author:- Markoff Chaney 	 No. of Views:- 84557
+*************************************************************************************
+Printing days when there are more than 1% of bad requests: 
+ Day :- July 17, 2016 	 errors:- 2.28%
+*************************************************************************************
