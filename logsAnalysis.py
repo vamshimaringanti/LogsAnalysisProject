@@ -1,14 +1,16 @@
+#! /usr/bin/env python3
+
 import psycopg2
 
-DBNAME = "news"
-
 # SQL Query to fetch top 3 articles
-TOP3_ARTICLES_VIEWS_SQL = '''select articles.title, count(log.path) as num
-from log, articles
-where log.path like '%' || articles.slug
+TOP3_ARTICLES_VIEWS_SQL = '''select articles.title, count(log.path) as views
+from log
+join articles
+on log.path = concat('/article/', articles.slug)
 group by articles.title
-order by num desc
-limit 3;'''
+order by views desc
+limit 3;
+'''
 
 # SQL Query to fetch authors sorted by sum of their article views
 POPULAR_ARTICLES_AUTHOR_SQL = '''select title_num_name.name, sum(num)
@@ -23,16 +25,10 @@ order by num_of_view desc;
 '''
 
 # SQL Query to find the days where number of bad requests are > 1%
-# date_status_code view has formatted date & status entries like this
-# July 15, 2016 | 200 OK
-# Had to use with clause because I could not filter percentage
-# by using column alias.
+# Used with clause because I could not filter percentage
+# by using percentage column alias.
 
-DATES_BAD_REQUESTS_SQL = '''create or replace view date_status_code as
-    select to_char(time, 'FMMonth DD, YYYY') as date, status
-    from log;
-
-with date_status_ok_bad_percentage as (
+DATES_BAD_REQUESTS_SQL = '''with date_status_ok_bad_percentage as (
     select requests_bad.date as date,
            requests_bad.bad_requests_count,
            requests_total.total_requests_count,
@@ -57,32 +53,48 @@ select date, round(percentage, 2) from date_status_ok_bad_percentage
 where percentage > 1;
 '''
 
-try:
-    db = psycopg2.connect(database=DBNAME)
-    my_cursor = db.cursor()
-    my_cursor.execute(TOP3_ARTICLES_VIEWS_SQL)
-    top3_popular_aritcles = my_cursor.fetchall()
+
+def connect_db(database_name="news"):
+    try:
+        db = psycopg2.connect("dbname={}".format(database_name))
+        cursor = db.cursor()
+        return db, cursor
+
+    except ConnectionError as e:
+        print("Error connecting to database", e)
+
+
+def get_sql_output(cursor, sql_query):
+    cursor.execute(sql_query)
+    return cursor.fetchall()
+
+
+def execute_sql_queries():
+    db, my_cursor = connect_db()
+    top3_popular_articles = get_sql_output(my_cursor, TOP3_ARTICLES_VIEWS_SQL)
     print("*" * 85)
     print("Top 3 articles sorted by views are : ")
-    for article in top3_popular_aritcles:
+    for article in top3_popular_articles:
         print(" Article :- {} \t No. of Views:- {}".
               format(article[0], article[1]))
+
     print("*" * 85)
-    my_cursor.execute(POPULAR_ARTICLES_AUTHOR_SQL)
-    popular_authors = my_cursor.fetchall()
+    popular_authors = get_sql_output(my_cursor, POPULAR_ARTICLES_AUTHOR_SQL)
     print("Popular authors by summing all their article views: ")
     for author in popular_authors:
         print(" Author:- {} \t No. of Views:- {}".
               format(author[0], author[1]))
+
     print("*" * 85)
-    my_cursor.execute(DATES_BAD_REQUESTS_SQL)
-    bad_request_days = my_cursor.fetchall()
+    bad_request_days = get_sql_output(my_cursor, DATES_BAD_REQUESTS_SQL)
     print("Printing days when there are more than 1% of bad requests: ")
     for day in bad_request_days:
         print(" Day :- {} \t errors:- {}%".
               format(day[0], day[1]))
     print("*" * 85)
+
     db.close()
 
-except ConnectionError as e:
-    print(e)
+
+if __name__ == '__main__':
+    execute_sql_queries()
